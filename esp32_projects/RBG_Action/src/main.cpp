@@ -1,8 +1,8 @@
 #include <WiFi.h> // Include the WiFi library
 #include <PubSubClient.h>
 #include <Adafruit_NeoPixel.h>
+#include <Preferences.h>
 #include <cstring>
-#include <vector>
 
 #define PIN 38
 
@@ -13,7 +13,17 @@ const char *ssid = "TP-Link_4757";
 const char *password = "28361473";
 const char *mqtt_server = "86.121.175.88";
 
-int Action[16][5];
+typedef struct action
+{
+  uint8_t R;
+  uint8_t G;
+  uint8_t B;
+  uint32_t duration;
+  uint8_t mode;
+} Action;
+
+Action actions[16];
+Action aux;
 
 uint8_t com_size = 0, current_com = 0;
 
@@ -25,15 +35,17 @@ PubSubClient client(espClient);
 TaskHandle_t xHandleTaskMode0 = NULL;
 TaskHandle_t xHandleTaskMode1 = NULL;
 
+Preferences prefs;
+
 void vTaskMode0(void *pvParameters)
 {
-  vTaskDelay(10 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
+  vTaskDelay(50 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
   for (;;)
   {
-    vTaskDelay((Action[current_com][3] - 10) / portTICK_PERIOD_MS);
-    R = Action[current_com][0];
-    G = Action[current_com][1];
-    B = Action[current_com][2];
+    vTaskDelay((actions[current_com].duration - 50) / portTICK_PERIOD_MS);
+    R = actions[current_com].R;
+    G = actions[current_com].G;
+    B = actions[current_com].B;
     current_com++;
     vTaskSuspend(NULL);                  // Suspend itself after completion
     vTaskDelay(10 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
@@ -44,11 +56,11 @@ void vTaskMode1(void *pvParameters)
 {
   for (;;)
   {
-    float stepR = (Action[current_com][0] - R) / (Action[current_com][3] / 1.0);
-    float stepG = (Action[current_com][1] - G) / (Action[current_com][3] / 1.0);
-    float stepB = (Action[current_com][2] - B) / (Action[current_com][3] / 1.0);
+    float stepR = (actions[current_com].R - R) / (actions[current_com].duration / 1.0);
+    float stepG = (actions[current_com].G - G) / (actions[current_com].duration / 1.0);
+    float stepB = (actions[current_com].B - B) / (actions[current_com].duration / 1.0);
 
-    for (int i = 0; i < Action[current_com][3]; i++)
+    for (int i = 0; i < actions[current_com].duration; i++)
     {
       R += stepR;
       G += stepG;
@@ -110,6 +122,64 @@ void startTasks()
   vTaskSuspend(xHandleTaskMode1);
 }
 
+void writeActionsToFlash(int id, byte *pay)
+{
+  char key[20];
+  char b_id[2];
+  sprintf(b_id, "%d", id);
+  strcat(key, b_id);
+  strcat(key, "_action_");
+  prefs.putBytes(key, pay, sizeof(pay));
+  Serial.println("Actions written to flash memory.");
+}
+
+// void writeNumActionsToFlash(int id, int numActions)
+// {
+//   char key[20];
+//   char b_id[2];
+//   sprintf(b_id, "%d", id);
+//   strcat(key, b_id);
+//   strcat(key, "_numActions_");
+//   prefs.putBytes(key, &numActions, sizeof(numActions));
+// }
+
+void readActionsFromFlash(int id)
+{
+  char key[20];
+  char b_id[2];
+  int numActions = 0;
+  unsigned int i = 0;
+
+  sprintf(b_id, "%d", id);
+  strcat(key, b_id);
+  strcat(key, "_action_");
+  size_t schLen = prefs.getBytesLength(key);
+  char buffer[schLen];
+  prefs.getBytes(key, buffer, schLen);
+
+  while (i < schLen)
+  {
+    uint8_t *ptr = (uint8_t *)&actions[numActions];
+    for (unsigned int j = 0; j < 4; i++, j++)
+    {
+      int result = 0;
+
+      while (buffer[i] != ',')
+      {
+        result = result * 10 + (buffer[i] - '0');
+        i++;
+      }
+
+      *(ptr + j) = result;
+      Serial.println(result);
+    }
+    actions[numActions].mode = buffer[i] - '0';
+    numActions++;
+    i += 2;
+  }
+  com_size = numActions;
+}
+
 void setup_wifi()
 {
   delay(10);
@@ -144,30 +214,51 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   if (strcmp(topic, "Action") == 0)
   {
-    startTasks();
-    unsigned i = 0;
-    while (i < length)
+    unsigned int i = 0, j;
+    int id = 0;
+
+    while (payload[i] != ',')
     {
-      for (unsigned int j = 0; j < 4; i++, j++)
-      {
-        int result = 0;
-
-        while (payload[i] != ',')
-        {
-          result = result * 10 + (payload[i] - '0');
-          i++;
-        }
-
-        Action[com_size][j] = result;
-        Serial.println(result);
-      }
-      Action[com_size][4] = payload[i] - '0';
-      com_size++;
-      i += 2;
-      Serial.print(com_size);
-      Serial.print("");
-      Serial.println(current_com);
+      id = id * 10 + (payload[i] - '0');
+      i++;
     }
+    i++;
+
+    // while (i < length)
+    // {
+    //   // uint8_t *ptr = (uint8_t *)&aux;
+    //   // for (unsigned int j = 0; j < 4; i++, j++)
+    //   // {
+    //   //   int result = 0;
+
+    //   //   while (payload[i] != ',')
+    //   //   {
+    //   //     result = result * 10 + (payload[i] - '0');
+    //   //     i++;
+    //   //   }
+
+    //   //   *(ptr + i) = result;
+    //   //   Serial.println(result);
+    //   // }
+    //   // aux.mode = payload[i] - '0';
+    //   // writeActionToFlash(id, numActions, aux);
+    //   // numActions++;
+    //   // i += 2;
+    //   if (payload[i] == ';')
+    //     numActions++;
+    //   i++;
+    // }
+    writeActionsToFlash(id, payload + i);
+  }
+  if (strcmp(topic, "Trigger") == 0)
+  {
+    int id = 0;
+    for (unsigned int i = 0; i < length; i++)
+    {
+      id = id * 10 + (payload[i] - '0');
+    }
+    readActionsFromFlash(id);
+    startTasks();
   }
 }
 
@@ -185,6 +276,7 @@ void reconnect()
     {
       Serial.println("connected");
       client.subscribe("Action");
+      client.subscribe("Trigger");
     }
     else
     {
@@ -217,11 +309,11 @@ void loop()
 
   if (current_com < com_size)
   {
-    if (Action[current_com][4] == 0)
+    if (actions[current_com].mode == 0)
     {
       vTaskResume(xHandleTaskMode0);
     }
-    else if (Action[current_com][4] == 1)
+    else if (actions[current_com].mode == 1)
     {
       vTaskResume(xHandleTaskMode1);
     }
