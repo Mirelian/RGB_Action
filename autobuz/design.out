@@ -1,0 +1,256 @@
+***************************************************************************************
+***                                                                                 ***
+*** Elements Version 9.10e (x64) - 6/26/2024 2:04 PM                                ***
+*** Platform: Windows 10                                                            ***
+*** Architecture: x64                                                               ***
+*** Serial Number:                                                                  ***
+*** User:                                                                           ***
+***                                                                                 ***
+*** TITLE:   * C:\Users\numef\OneDrive\Desktop\Workspace\Fractal\autobuz\sim2.sxsch***
+*** NETLIST: C:\Users\numef\OneDrive\Desktop\Workspace\Fractal\autobuz\design.net   ***
+***                                                                                 ***
+***************************************************************************************
+
+********************************************************************************
+***                                                                          ***
+***                                Input Deck                                ***
+***                                                                          ***
+********************************************************************************
+
+.options bjtPSpiceSubNode=1
+.options allowdivzero=1
+.options initCondMode=2
+.options icres=0.002
+.options inhibitAttoISource=1
+#SIMETRIX
+V1 V1_P 0 5 Pulse(0 5 0 150m 150m 500m)
+V2 V2_P 0 5
+R1 Q1_G 0 10k
+R2 R2_P R2_N 100
+R3 V1_P D1_N 330
+R4 0 Q1_D 10
+X$D1 0 D1_N BZX79-4V7 pinnames: P N
+X$U2 D1_N R2_P R2_N V1_P 0 0 Q1_G V2_P AD8221 pinnames: IN- RG1 RG2 IN+ VS- REF OUT VS+
+X$Q1 Q1_D Q1_G V1_P RFD15P05 pinnames: D G S
+.tran 1
+.subckt RFD15P05 D G S
+.model mosfet PMOS( LEVEL=17 VTO=-3.849 RS=0.05502 KP=8.885 RD=0.0367 TC1RD=0.0204 RG=20.81 IS=1e-36 LIMIT(VDS)=(-50,*)
++ CGDMAX=6.50E-10 CGDMIN=5.00E-11 XG2CGD=0.5 XG1CGD=0.1 CBD=3.22E-10 VTCGD=0)
+.model diode D( IS=2.47e-11 RS=0.022 TT=9.866e-08)
+M1 D G S S mosfet
+D1 D S Diode
+Cgs G S 1.09E-09
+.ends
+.SUBCKT AD8221  IN-  RG-  RG+  IN+  -Vs   REF  VOUT  +Vs
+*#ASSOC Category="Instrumentation Amplifiers" Symbol=ADIInstAmp8p Mapping=2,7,8,1,4,6,5,3
+*?@ Start SIMPLIS Encryption $$WC_SIMPLIS_ENCRYPT_TAG$$
+** INPUT STAGER1 sub_out sub_neg 10E3
+R1 sub_out sub_neg 10E3
+R2 sub_neg Inverting_Out 10E3
+R3 sub_pos noninverting_out 10001
+R4 REF sub_pos 10k
+R5 RG- N003 24700
+R6 RG+ N010 24724
+D3 N003 P001 D
+D4 P002 N003 D
+V3 P002 VNEGx 0.94
+V4 VPOSx P001 .71
+D5 N010 P003 D
+D6 P004 N010 D
+V5 P004 VNEGx 0.94
+V6 VPOSx P003 .71
+D7 N005 P005 D
+D8 P006 N005 D
+V7 P006 VNEGx 2.0
+V8 VPOSx P005 1.7
+D9 N016 P007 D
+D10 P008 N016 D
+V9 P008 VNEGx 2.0
+V10 VPOSx P007 1.7
+D11 N009 P009 D
+D12 P010 N009 D
+V11 P010 N017 1.7
+V12 N008 P009 1.7
+D13 REF P011 D
+D14 P012 REF D
+V13 P012 VNEGx .3
+V14 VPOSx P011 .3
+D15 sub_pos P013 D
+D16 P014 sub_pos D
+V15 P014 VNEGx 0.9
+V16 VPOSx P013 0.9
+E4 Inverting_Out 0 N003 0 1
+E5 noninverting_out 0 N010 0 1
+V1 VBIAS +Vs 20
+I1 VBIAS Pos_Fdbk 20E-6
+I2 VBIAS Inv_Fdbk 20E-6
+C1 N003 Inv_Fdbk 9.235e-12
+C2 N010 Pos_Fdbk 9.2e-12
+E8 N002 0 N005 0 1
+E9 N013 0 N016 0 1
+VOSI_Neg N004 IN- 25E-6
+VOSI_Pos IN+ N014 24E-6
+VOSO VOUT N009 300E-6
+C3 RG- 0 .200e-12
+C4 RG+ 0 .135e-12
+I23 IN- 0 1.4E-9
+I24 IN+ 0 0.8E-9
+G1 0 IN+ N018 N019 .0025e-9
+R13 IN+ N018 10e9
+R14 N018 IN- 10e9
+R15 +Vs N019 10e9
+R16 N019 -Vs 10e9
+G2 0 IN- N018 N019 .0025e-9
+E10 VPOSx 0 +Vs 0 1
+I3 +Vs -Vs 900E-6
+G3 +Vs -Vs +Vs -Vs 1e-6
+E11 VNEGx 0 -Vs 0 1
+H3 N006 N004 V24 4.5
+V24 N001 0 0
+R19 N001 0 .0166
+H4 VX sub_out V25 64
+V25 N007 0 0
+R20 N007 0 .0166
+H5 N015 N014 V26 4.5
+V26 N011 0 0
+R21 N011 0 .0166
+G4 0 N005 N006 N005 1
+G5 0 N016 N015 N016 1
+G6 0 N003 VBIAS Inv_Fdbk 1
+G7 0 N010 VBIAS Pos_Fdbk 1
+G8 0 sub_out sub_pos sub_neg 1
+R10 N005 0 10e9
+R7 N003 0 10E9
+R11 N016 0 10E9
+R8 N010 0 10E9
+R9 sub_out 0 10E9
+Q1 Pos_Fdbk N013 RG+ 0 NPN
+Q2 Inv_Fdbk N002 RG- 0 NPN
+G9 0 N012 VY N009 1
+G10 0 N009 N012 0 .002
+R12 N012 0 1e10
+R17 N009 0 500
+C5 N012 0 1.4e-7
+C6 N009 0 700e-12
+C8 VY 0 1e-9
+G11 0 VY VALUE = { LIMIT( 1*V(VX,VY), .002, -.002) }
+R22 VY 0 1e9
+R18 VBIAS Inv_Fdbk 1e9
+R23 Pos_Fdbk VBIAS 1e9
+D1 sub_out P015 D
+V2 VPOSx P015 1.7
+D2 P016 sub_out D
+V17 P016 VNEGx 1.7
+H1 VPOSx N008 POLY(1) VOSO 0 0 8000
+H2 N017 VNEGx POLY(1) VOSO 0 0 8000
+* MODELS USED
+*
+.model D D
+.model NPN NPN
+*?@ End SIMPLIS Encryption
+.ENDS AD8221
+.subckt BZX79-4V7 1 2
+D1 1 2 D1
+D2 2 3 D2
+I1 1 3 0.9814
+R1 1 3 4 TC1=-0.3566m
+.model D1 D IS=9.19e-16 CJO=300p RS=0.57061 ISR=4.05e-08
+.model D2 D IS=1.00e-15
+.ends
+
+********************************************************************************
+***                                                                          ***
+*** Starting Transient analysis at 2:04 PM                                   ***
+***                                                                          ***
+*** Analysis card: .tran 1                                                   ***
+***                                                                          ***
+********************************************************************************
+********************************************************************************
+***                                                                          ***
+***                            Simulation Options                            ***
+***                                                                          ***
+********************************************************************************
+RELTOL                    0.001
+ABSTOL                    1e-12
+VNTOL                     1e-06
+POINTTOL                  0.001
+TEMPERATURE               27C
+GMIN                      1e-12
+Matrix Solver             UF KLU Version 1.1
+
+
+
+********************************************************************************
+***                                                                          ***
+***                             Device parameters                            ***
+***                                                                          ***
+********************************************************************************
+Model parameters for devices of type VMOS
+=========================================
+Model:       Q1.mosfet    
+
+cbd          322p         
+cgdmax       650p         
+cgdmin       50p          
+is           1E-36        
+kp           8.885        
+rd           36.7m        
+rg           20.81        
+rs           55.02m       
+tc1rd        20.4m        
+vtcgd        0            
+vto          -3.849       
+xg1cgd       100m         
+xg2cgd       500m         
+
+
+Model parameters for devices of type Diode
+==========================================
+Model:       D1.D1        D1.D2        Q1.Diode     U2.D         
+
+cjo          300p         0            0            0            
+is           919a         1f           24.7p        10f          
+isr          40.5n        0            0            0            
+rs           570.61m      0            22m          0            
+tt           0            0            98.66n       0            
+
+
+Analysis statistics
+===================
+
+Nominal temperature = 27
+Operating temperature = 27
+Total iterations = 547
+Transient iterations = 522
+Transient timepoints = 147
+Accepted timepoints = 132
+Total analysis time = 0.016
+Transient time = 0
+Matrix reordering time = 0
+L-U decomposition time = 0
+Matrix solve time = 0
+Load time = 0
+Transient L-U decomp time = 0
+Transient solve time = 0
+Circuit build time = 0
+Simulator initialise time = 0
+Data write time = 0
+Convergence test time = 0
+LTE time = 0
+JI2 Iterations = 25
+Diag. GMIN stepping iterations = 0
+Junc. GMIN stepping iterations = 0
+Source stepping iterations = 0
+PTA iterations = 0
+Number of matrix fill ins = -142
+Number of initial matrix elements = 288
+Circuit equations = 97
+State vector size = 240
+Number of write buffer faults = 0
+
+Run statistics
+==============
+
+Netlist read in time = 0.016
+Total run time = 0.047 seconds
+Analysis concluded 6/26/2024 2:04 PM

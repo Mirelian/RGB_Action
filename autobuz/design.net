@@ -1,0 +1,13 @@
+* C:\Users\numef\OneDrive\Desktop\Workspace\Fractal\autobuz\sim2.sxsch
+*#SIMETRIX
+V1 V1_P 0 5 Pulse(0 5 0 150m 150m 500m)
+V2 V2_P 0 5
+R1 Q1_G 0 10k
+R2 R2_P R2_N 100
+R3 V1_P D1_N 330
+R4 0 Q1_D 10
+X$D1 0 D1_N BZX79-4V7 pinnames: P N
+X$U2 D1_N R2_P R2_N V1_P 0 0 Q1_G V2_P AD8221 pinnames: IN- RG1 RG2 IN+ VS- REF OUT VS+
+X$Q1 Q1_D Q1_G V1_P RFD15P05 pinnames: D G S
+.tran 1
+
