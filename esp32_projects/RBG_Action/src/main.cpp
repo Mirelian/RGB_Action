@@ -20,81 +20,6 @@ float dR = 0, dG = 0, dB = 0;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-hw_timer_t *timer = NULL;
-volatile bool timerRunning = false;
-volatile int count = 0;
-
-void timerEnd1()
-{
-  if (timerRunning)
-  {
-    timerEnd(timer); // Deinitialize the timer
-    timerRunning = false;
-    Serial.println("Timer finished");
-  }
-}
-
-void IRAM_ATTR onTimer()
-{
-  count++;
-
-  // if (Action[4] == 1)
-  // { // Mode 1: Increment/Decrement
-  //   if (count <= Action[3])
-  //   {
-  //     R += dR;
-  //     G += dG;
-  //     B += dB;
-  //   }
-  //   else
-  //   {
-  //     timerEnd1(); // Stop the timer after the duration
-  //   }
-  // }
-  // else
-  // { // Mode 0: Immediate change
-  //   if (count >= Action[3])
-  //   {
-  //     R = Action[0];
-  //     G = Action[1];
-  //     B = Action[2];
-  //     timerEnd1(); // Stop the timer after the duration
-  //   }
-  // }
-  if (count <= 250)
-  {
-    // R += 1;
-    // G += 1;
-    // B += 1;
-  }
-  else
-  {
-    timerEnd1();
-  }
-  Serial.println("aha");
-}
-
-void timerBegin1()
-{
-  if (timerRunning)
-  {
-    timerEnd1(); // Ensure previous timer is stopped before starting a new one
-  }
-
-  dR = (float)(Action[0] - R) / Action[3];
-  dG = (float)(Action[1] - G) / Action[3];
-  dB = (float)(Action[2] - B) / Action[3];
-
-  count = 0;
-
-  timer = timerBegin(0, 80, true);             // Use timer 0, prescaler 80 (1 us per tick)
-  timerAttachInterrupt(timer, &onTimer, true); // Attach the interrupt
-  timerAlarmWrite(timer, 1000, true);          // Set alarm to 1 ms
-  timerAlarmEnable(timer);                     // Enable the alarm
-  timerRunning = true;
-  Serial.println("Timer started");
-}
-
 void setup_wifi()
 {
   delay(10);
@@ -143,22 +68,18 @@ void callback(char *topic, byte *payload, unsigned int length)
       Serial.println(result);
     }
 
-    // transition = (bool)Action[4];
-    // timerDuration = Action[3];
-
-    // if (Action[4])
-    // {
-    //   // dR = (float)(Action[0] - R) / Action[3];
-    //   // dG = (float)(Action[1] - G) / Action[3];
-    //   // dB = (float)(Action[2] - B) / Action[3];
-    // }
-    // else
-    // {
-    //   dR = (float)Action[0];
-    //   dG = (float)Action[1];
-    //   dB = (float)Action[2];
-    // }
-    timerBegin1();
+    if (Action[4])
+    {
+      dR = (float)(Action[0] - R) / Action[3];
+      dG = (float)(Action[1] - G) / Action[3];
+      dB = (float)(Action[2] - B) / Action[3];
+    }
+    else
+    {
+      dR = (float)Action[0];
+      dG = (float)Action[1];
+      dB = (float)Action[2];
+    }
   }
 }
 
