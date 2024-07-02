@@ -13,36 +13,28 @@ const char *ssid = "TP-Link_4757";
 const char *password = "28361473";
 const char *mqtt_server = "86.121.175.88";
 
-struct Action
-{
-  int R;
-  int G;
-  int B;
-  int duration;
-  bool mode;
-};
+int Action[16][5];
+
+uint8_t com_size = 0, current_com = 0;
 
 volatile float R = 0, G = 0, B = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-bool running = false;
-int mode = -1;
-
 TaskHandle_t xHandleTaskMode0 = NULL;
 TaskHandle_t xHandleTaskMode1 = NULL;
 
 void vTaskMode0(void *pvParameters)
 {
-  running = true;
+  vTaskDelay(10 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
   for (;;)
   {
-    vTaskDelay(Action[3] / portTICK_PERIOD_MS);
-    R = Action[0];
-    G = Action[1];
-    B = Action[2];
-    running = false;
+    vTaskDelay((Action[current_com][3] - 10) / portTICK_PERIOD_MS);
+    R = Action[current_com][0];
+    G = Action[current_com][1];
+    B = Action[current_com][2];
+    current_com++;
     vTaskSuspend(NULL);                  // Suspend itself after completion
     vTaskDelay(10 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
   }
@@ -50,14 +42,13 @@ void vTaskMode0(void *pvParameters)
 
 void vTaskMode1(void *pvParameters)
 {
-  running = true;
   for (;;)
   {
-    float stepR = (Action[0] - R) / (Action[3] / 1.0);
-    float stepG = (Action[1] - G) / (Action[3] / 1.0);
-    float stepB = (Action[2] - B) / (Action[3] / 1.0);
+    float stepR = (Action[current_com][0] - R) / (Action[current_com][3] / 1.0);
+    float stepG = (Action[current_com][1] - G) / (Action[current_com][3] / 1.0);
+    float stepB = (Action[current_com][2] - B) / (Action[current_com][3] / 1.0);
 
-    for (int i = 0; i < Action[3]; i++)
+    for (int i = 0; i < Action[current_com][3]; i++)
     {
       R += stepR;
       G += stepG;
@@ -70,10 +61,53 @@ void vTaskMode1(void *pvParameters)
       Serial.println(B);
       vTaskDelay(1 / portTICK_PERIOD_MS);
     }
-    running = false;
+    current_com++;
     vTaskSuspend(NULL);                  // Suspend itself after completion
     vTaskDelay(10 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
   }
+}
+
+void stopTasks()
+{
+  if (xHandleTaskMode0 != NULL)
+  {
+    vTaskDelete(xHandleTaskMode0);
+    xHandleTaskMode0 = NULL;
+  }
+  if (xHandleTaskMode1 != NULL)
+  {
+    vTaskDelete(xHandleTaskMode1);
+    xHandleTaskMode1 = NULL;
+  }
+}
+
+void startTasks()
+{
+  stopTasks();
+  com_size = 0;
+  current_com = 0;
+  xTaskCreatePinnedToCore(
+      vTaskMode0,        // Function to be called
+      "TaskMode0",       // Name of the task
+      10000,             // Stack size (bytes)
+      NULL,              // Parameter to pass
+      1,                 // Task priority
+      &xHandleTaskMode0, // Task handle
+      0);                // Core where the task should run
+
+  vTaskSuspend(xHandleTaskMode0);
+
+  xTaskCreatePinnedToCore(
+      vTaskMode1,        // Function to be called
+      "TaskMode1",       // Name of the task
+      10000,             // Stack size (bytes)
+      NULL,              // Parameter to pass
+      1,                 // Task priority
+      &xHandleTaskMode1, // Task handle
+      1);                // Core where the task should run
+
+  // Immediately suspend both tasks
+  vTaskSuspend(xHandleTaskMode1);
 }
 
 void setup_wifi()
@@ -110,20 +144,30 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   if (strcmp(topic, "Action") == 0)
   {
-    for (unsigned int i = 0, j = 0; j < 5 && i < length; i++, j++)
+    startTasks();
+    unsigned i = 0;
+    while (i < length)
     {
-      int result = 0;
-
-      while (payload[i] != ',' && i < length)
+      for (unsigned int j = 0; j < 4; i++, j++)
       {
-        result = result * 10 + (payload[i] - '0');
-        i++;
-      }
+        int result = 0;
 
-      Action[j] = result;
-      Serial.println(result);
+        while (payload[i] != ',')
+        {
+          result = result * 10 + (payload[i] - '0');
+          i++;
+        }
+
+        Action[com_size][j] = result;
+        Serial.println(result);
+      }
+      Action[com_size][4] = payload[i] - '0';
+      com_size++;
+      i += 2;
+      Serial.print(com_size);
+      Serial.print("");
+      Serial.println(current_com);
     }
-    mode = Action[4];
   }
 }
 
@@ -161,28 +205,6 @@ void setup()
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   pixels.begin();
-
-  xTaskCreatePinnedToCore(
-      vTaskMode0,        // Function to be called
-      "TaskMode0",       // Name of the task
-      10000,             // Stack size (bytes)
-      NULL,              // Parameter to pass
-      1,                 // Task priority
-      &xHandleTaskMode0, // Task handle
-      0);                // Core where the task should run
-
-  xTaskCreatePinnedToCore(
-      vTaskMode1,        // Function to be called
-      "TaskMode1",       // Name of the task
-      10000,             // Stack size (bytes)
-      NULL,              // Parameter to pass
-      1,                 // Task priority
-      &xHandleTaskMode1, // Task handle
-      1);                // Core where the task should run
-
-  // Immediately suspend both tasks
-  vTaskSuspend(xHandleTaskMode0);
-  vTaskSuspend(xHandleTaskMode1);
 }
 
 void loop()
@@ -193,16 +215,14 @@ void loop()
   }
   client.loop();
 
-  if (!running)
+  if (current_com < com_size)
   {
-    if (mode == 0)
+    if (Action[current_com][4] == 0)
     {
-      mode = -1;
       vTaskResume(xHandleTaskMode0);
     }
-    else if (mode == 1)
+    else if (Action[current_com][4] == 1)
     {
-      mode = -1;
       vTaskResume(xHandleTaskMode1);
     }
   }
