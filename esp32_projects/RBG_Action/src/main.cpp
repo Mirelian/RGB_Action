@@ -23,7 +23,6 @@ typedef struct action
 } Action;
 
 Action actions[16];
-Action aux;
 
 uint8_t com_size = 0, current_com = 0;
 
@@ -59,18 +58,26 @@ void vTaskMode1(void *pvParameters)
     float stepR = (actions[current_com].R - R) / (actions[current_com].duration / 1.0);
     float stepG = (actions[current_com].G - G) / (actions[current_com].duration / 1.0);
     float stepB = (actions[current_com].B - B) / (actions[current_com].duration / 1.0);
+    Serial.print(current_com);
+    Serial.print(" ");
+    Serial.print("stepR:");
+    Serial.print(stepR);
+    Serial.print(" stepG:");
+    Serial.print(stepG);
+    Serial.print(" stepB:");
+    Serial.println(stepB);
 
     for (int i = 0; i < actions[current_com].duration; i++)
     {
       R += stepR;
       G += stepG;
       B += stepB;
-      Serial.print("R:");
-      Serial.print(R);
-      Serial.print(" G:");
-      Serial.print(G);
-      Serial.print(" B:");
-      Serial.println(B);
+      // Serial.print("R:");
+      // Serial.print(R);
+      // Serial.print(" G:");
+      // Serial.print(G);
+      // Serial.print(" B:");
+      // Serial.println(B);
       vTaskDelay(1 / portTICK_PERIOD_MS);
     }
     current_com++;
@@ -96,7 +103,6 @@ void stopTasks()
 void startTasks()
 {
   stopTasks();
-  com_size = 0;
   current_com = 0;
   xTaskCreatePinnedToCore(
       vTaskMode0,        // Function to be called
@@ -125,11 +131,12 @@ void startTasks()
 void writeActionsToFlash(int id, byte *pay)
 {
   char key[20];
-  char b_id[2];
+  char b_id[10];
   sprintf(b_id, "%d", id);
-  strcat(key, b_id);
+  strcpy(key, b_id);
   strcat(key, "_action_");
-  prefs.putBytes(key, pay, sizeof(pay));
+  prefs.begin(key);
+  prefs.putBytes(key, pay, 117);
   Serial.println("Actions written to flash memory.");
 }
 
@@ -146,21 +153,22 @@ void writeActionsToFlash(int id, byte *pay)
 void readActionsFromFlash(int id)
 {
   char key[20];
-  char b_id[2];
+  char b_id[10];
   int numActions = 0;
   unsigned int i = 0;
 
   sprintf(b_id, "%d", id);
-  strcat(key, b_id);
+  strcpy(key, b_id);
   strcat(key, "_action_");
   size_t schLen = prefs.getBytesLength(key);
+  Serial.println(schLen);
   char buffer[schLen];
   prefs.getBytes(key, buffer, schLen);
 
   while (i < schLen)
   {
-    uint8_t *ptr = (uint8_t *)&actions[numActions];
-    for (unsigned int j = 0; j < 4; i++, j++)
+    uint32_t *ptr = (uint32_t *)&actions[numActions];
+    for (int j = 0; j < 4; i++, j++)
     {
       int result = 0;
 
@@ -171,13 +179,25 @@ void readActionsFromFlash(int id)
       }
 
       *(ptr + j) = result;
-      Serial.println(result);
+      Serial.print(result);
+      Serial.print(" ");
     }
     actions[numActions].mode = buffer[i] - '0';
+    Serial.println(actions[numActions].mode);
+    Serial.print(actions[numActions].R);
+    Serial.print(" ");
+    Serial.print(actions[numActions].G);
+    Serial.print(" ");
+    Serial.print(actions[numActions].B);
+    Serial.print(" ");
+    Serial.print(actions[numActions].duration);
+    Serial.print(" ");
+    Serial.println(actions[numActions].mode);
     numActions++;
     i += 2;
   }
   com_size = numActions;
+  Serial.println(com_size);
 }
 
 void setup_wifi()
@@ -217,7 +237,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     unsigned int i = 0, j;
     int id = 0;
 
-    while (payload[i] != ',')
+    while (payload[i] != ';')
     {
       id = id * 10 + (payload[i] - '0');
       i++;
@@ -257,6 +277,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     {
       id = id * 10 + (payload[i] - '0');
     }
+    Serial.println(id);
     readActionsFromFlash(id);
     startTasks();
   }
