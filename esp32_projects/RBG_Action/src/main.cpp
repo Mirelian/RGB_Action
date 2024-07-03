@@ -18,13 +18,13 @@ typedef struct action
   uint8_t R;
   uint8_t G;
   uint8_t B;
+  bool mode;
   uint32_t duration;
-  uint8_t mode;
 } Action;
 
 Action actions[16];
 
-uint8_t com_size = 0, current_com = 0;
+uint8_t current_com = 0, com_size = 0;
 
 volatile float R = 0, G = 0, B = 0;
 
@@ -67,7 +67,7 @@ void vTaskMode1(void *pvParameters)
     Serial.print(" stepB:");
     Serial.println(stepB);
 
-    for (int i = 0; i < actions[current_com].duration; i++)
+    for (uint32_t i = 0; i < actions[current_com].duration; i++)
     {
       R += stepR;
       G += stepG;
@@ -128,33 +128,68 @@ void startTasks()
   vTaskSuspend(xHandleTaskMode1);
 }
 
-void writeActionsToFlash(int id, byte *pay)
+void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length)
 {
   char key[20];
   char b_id[10];
   sprintf(b_id, "%d", id);
   strcpy(key, b_id);
   strcat(key, "_action_");
+
+  Action Aactions[16];
+
+  uint8_t numActions = 0;
+  unsigned int i = 0;
+
+  while (i < length)
+  {
+    uint8_t *ptr = (uint8_t *)&Aactions[numActions];
+    for (uint8_t j = 0; j < 4; j++)
+    {
+      uint8_t result = 0;
+
+      while (pay[i] != ',')
+      {
+        result = result * 10 + (pay[i] - '0');
+        i++;
+      }
+
+      *(ptr + j) = result;
+      i++;
+      // Serial.print(result);
+      // Serial.print(" ");
+    }
+    Aactions[numActions].duration = 0;
+    while (pay[i] != ';')
+    {
+      Aactions[numActions].duration = Aactions[numActions].duration * 10 + (pay[i] - '0');
+      i++;
+    }
+    // Serial.println(actions[numActions].mode);
+    // Serial.print(actions[numActions].R);
+    // Serial.print(" ");
+    // Serial.print(actions[numActions].G);
+    // Serial.print(" ");
+    // Serial.print(actions[numActions].B);
+    // Serial.print(" ");
+    // Serial.print(actions[numActions].duration);
+    // Serial.print(" ");
+    // Serial.println(actions[numActions].mode);
+    numActions++;
+    i += 2;
+  }
+
   prefs.begin(key);
-  prefs.putBytes(key, pay, 117);
+
+  prefs.putBytes(key, Aactions, sizeof(Action) * numActions);
   Serial.println("Actions written to flash memory.");
 }
 
-// void writeNumActionsToFlash(int id, int numActions)
-// {
-//   char key[20];
-//   char b_id[2];
-//   sprintf(b_id, "%d", id);
-//   strcat(key, b_id);
-//   strcat(key, "_numActions_");
-//   prefs.putBytes(key, &numActions, sizeof(numActions));
-// }
-
-void readActionsFromFlash(int id)
+void readActionsFromFlash(uint8_t id)
 {
   char key[20];
   char b_id[10];
-  int numActions = 0;
+  uint8_t numActions = 0;
   unsigned int i = 0;
 
   sprintf(b_id, "%d", id);
@@ -162,41 +197,9 @@ void readActionsFromFlash(int id)
   strcat(key, "_action_");
   size_t schLen = prefs.getBytesLength(key);
   Serial.println(schLen);
-  char buffer[schLen];
-  prefs.getBytes(key, buffer, schLen);
-
-  while (i < schLen)
-  {
-    uint32_t *ptr = (uint32_t *)&actions[numActions];
-    for (int j = 0; j < 4; i++, j++)
-    {
-      int result = 0;
-
-      while (buffer[i] != ',')
-      {
-        result = result * 10 + (buffer[i] - '0');
-        i++;
-      }
-
-      *(ptr + j) = result;
-      Serial.print(result);
-      Serial.print(" ");
-    }
-    actions[numActions].mode = buffer[i] - '0';
-    Serial.println(actions[numActions].mode);
-    Serial.print(actions[numActions].R);
-    Serial.print(" ");
-    Serial.print(actions[numActions].G);
-    Serial.print(" ");
-    Serial.print(actions[numActions].B);
-    Serial.print(" ");
-    Serial.print(actions[numActions].duration);
-    Serial.print(" ");
-    Serial.println(actions[numActions].mode);
-    numActions++;
-    i += 2;
-  }
-  com_size = numActions;
+  memset(actions, 0, sizeof(Action) * 16);
+  prefs.getBytes(key, actions, schLen);
+  com_size = schLen / sizeof(Action);
   Serial.println(com_size);
 }
 
@@ -234,8 +237,8 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   if (strcmp(topic, "Action") == 0)
   {
-    unsigned int i = 0, j;
-    int id = 0;
+    unsigned int i = 0;
+    uint8_t id = 0;
 
     while (payload[i] != ';')
     {
@@ -243,42 +246,35 @@ void callback(char *topic, byte *payload, unsigned int length)
       i++;
     }
     i++;
-
-    // while (i < length)
-    // {
-    //   // uint8_t *ptr = (uint8_t *)&aux;
-    //   // for (unsigned int j = 0; j < 4; i++, j++)
-    //   // {
-    //   //   int result = 0;
-
-    //   //   while (payload[i] != ',')
-    //   //   {
-    //   //     result = result * 10 + (payload[i] - '0');
-    //   //     i++;
-    //   //   }
-
-    //   //   *(ptr + i) = result;
-    //   //   Serial.println(result);
-    //   // }
-    //   // aux.mode = payload[i] - '0';
-    //   // writeActionToFlash(id, numActions, aux);
-    //   // numActions++;
-    //   // i += 2;
-    //   if (payload[i] == ';')
-    //     numActions++;
-    //   i++;
-    // }
-    writeActionsToFlash(id, payload + i);
+    writeActionsToFlash(id, payload + i, length - i);
   }
   if (strcmp(topic, "Trigger") == 0)
   {
-    int id = 0;
+    uint8_t id = 0;
     for (unsigned int i = 0; i < length; i++)
     {
       id = id * 10 + (payload[i] - '0');
     }
     Serial.println(id);
     readActionsFromFlash(id);
+    // Serial.print(actions[0].R);
+    // Serial.print(" ");
+    // Serial.print(actions[0].G);
+    // Serial.print(" ");
+    // Serial.print(actions[0].B);
+    // Serial.print(" ");
+    // Serial.println(actions[0].mode);
+    // Serial.print(" ");
+    // Serial.print(actions[0].duration);
+    // Serial.print(actions[7].R);
+    // Serial.print(" ");
+    // Serial.print(actions[7].G);
+    // Serial.print(" ");
+    // Serial.print(actions[7].B);
+    // Serial.print(" ");
+    // Serial.println(actions[7].mode);
+    // Serial.print(" ");
+    // Serial.print(actions[7].duration);
     startTasks();
   }
 }
