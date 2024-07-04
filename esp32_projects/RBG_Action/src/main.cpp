@@ -11,12 +11,16 @@ void setup()
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
+  configTime(gmtOffset_sec, daylightOffset_sec, ntp_server);
+
   pixels.updateLength(1);
   pixels.setPin(PIN);
   pixels.updateType(NEO_GRB + NEO_KHZ800);
   pixels.begin();
 
   prefs.begin("actions", false);
+
+  startTimeTask();
 }
 
 void loop()
