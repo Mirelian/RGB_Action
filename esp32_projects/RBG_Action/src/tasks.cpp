@@ -62,20 +62,7 @@ void vCheckTime(void *pvParameters)
     {
         if (!getLocalTime(&currentTime))
             continue;
-        printLocalTime();
-        Serial.print("ID:");
-        if (currentTime.tm_min % 2 == 0)
-        {
-            Serial.println(4);
-            readActionsFromFlash(4);
-            startTasks();
-        }
-        else
-        {
-            Serial.println(3);
-            readActionsFromFlash(3);
-            startTasks();
-        }
+        checkEvents(currentTime);
 
         vTaskDelay(60000 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
     }

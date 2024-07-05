@@ -51,9 +51,8 @@ void callback(char *topic, byte *payload, unsigned int length)
         }
         i++;
         writeActionsToFlash(id, payload + i, length - i);
-        printLocalTime();
     }
-    if (strcmp(topic, "Trigger") == 0)
+    else if (strcmp(topic, "Trigger/Now") == 0)
     {
         uint8_t id = 0;
         for (unsigned int i = 0; i < length; i++)
@@ -63,6 +62,19 @@ void callback(char *topic, byte *payload, unsigned int length)
         Serial.println(id);
         readActionsFromFlash(id);
         startTasks();
+    }
+    else if (strcmp(topic, "Trigger/Time") == 0)
+    {
+        unsigned int i = 0;
+        uint8_t id = 0;
+
+        while (payload[i] != ';')
+        {
+            id = id * 10 + (payload[i] - '0');
+            i++;
+        }
+        i++;
+        addEvent(id, payload + i, length - i);
     }
 }
 
@@ -80,7 +92,8 @@ void reconnect()
         {
             Serial.println("connected");
             client.subscribe("Action");
-            client.subscribe("Trigger");
+            client.subscribe("Trigger/Now");
+            client.subscribe("Trigger/Time");
         }
         else
         {

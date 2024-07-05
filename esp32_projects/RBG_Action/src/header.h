@@ -26,7 +26,7 @@ typedef struct action
 extern Action actions[16];
 extern uint8_t current_com, com_size;
 
-// Wifi, MQTT and NTP
+// Wifi, MQTT
 extern const char *ssid;
 extern const char *password;
 extern const char *mqtt_server;
@@ -57,12 +57,26 @@ void stopTasks();
 void startTasks();
 void startTimeTask();
 
-// NTP
+// NTP and time
+typedef struct schedule
+{
+    uint8_t id;
+    char type;
+    uint8_t hour;
+    uint8_t minute;
+    time_t lastOccurence; // only used for 'r' events
+} Event;
+extern Event events[10];
+extern uint8_t nr_events;
+
 extern const char *ntp_server;
 
 extern const uint32_t gmtOffset_sec;
 extern const uint16_t daylightOffset_sec;
 
-void printLocalTime();
+void printLocalTime(struct tm timeinfo);
+void addEvent(uint8_t id, byte *pay, unsigned int length);
+double getSeconds(Event event);
+void checkEvents(struct tm currentTime);
 
 #endif
