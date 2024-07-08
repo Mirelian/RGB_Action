@@ -39,18 +39,18 @@ void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length)
             Aactions[numActions].duration = Aactions[numActions].duration * 10 + (pay[i] - '0');
             i++;
         }
-        // Serial.println(actions[numActions].mode);
-        // Serial.print(actions[numActions].R);
-        // Serial.print(" ");
-        // Serial.print(actions[numActions].G);
-        // Serial.print(" ");
-        // Serial.print(actions[numActions].B);
-        // Serial.print(" ");
-        // Serial.print(actions[numActions].duration);
-        // Serial.print(" ");
-        // Serial.println(actions[numActions].mode);
+        Serial.println(Aactions[numActions].mode);
+        Serial.print(Aactions[numActions].R);
+        Serial.print(" ");
+        Serial.print(Aactions[numActions].G);
+        Serial.print(" ");
+        Serial.print(Aactions[numActions].B);
+        Serial.print(" ");
+        Serial.print(Aactions[numActions].duration);
+        Serial.print(" ");
+        Serial.println(Aactions[numActions].mode);
         numActions++;
-        i += 2;
+        i++;
     }
 
     prefs.putBytes(key, Aactions, sizeof(Action) * numActions);
@@ -61,11 +61,10 @@ void readActionsFromFlash(uint8_t id)
 {
     char key[20];
     char b_id[10];
-    uint8_t numActions = 0;
-
     sprintf(b_id, "%d", id);
     strcpy(key, b_id);
     strcat(key, "_scene_");
+
     size_t schLen = prefs.getBytesLength(key);
     memset(actions, 0, sizeof(Action) * 16);
     prefs.getBytes(key, actions, schLen);

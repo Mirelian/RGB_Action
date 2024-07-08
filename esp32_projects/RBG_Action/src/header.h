@@ -6,8 +6,8 @@
 #include <PubSubClient.h>
 #include <Adafruit_NeoPixel.h>
 #include <Preferences.h>
-#include <cstring>
-#include "time.h"
+#include <string.h>
+#include <time.h>
 
 // NeoPixel
 #define PIN 38
@@ -21,7 +21,7 @@ typedef struct action
     uint8_t G;
     uint8_t B;
     bool mode;
-    uint16_t duration;
+    uint16_t duration; // ms
 } Action;
 extern Action actions[16];
 extern uint8_t current_com, com_size;
