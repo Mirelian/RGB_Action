@@ -6,6 +6,7 @@
 #include <PubSubClient.h>
 #include <Adafruit_NeoPixel.h>
 #include <Preferences.h>
+#include <Update.h>
 #include <string.h>
 #include <time.h>
 
@@ -78,5 +79,11 @@ void printLocalTime(struct tm timeinfo);
 void addEvent(uint8_t id, byte *pay, unsigned int length);
 double getSeconds(Event event);
 void checkEvents(struct tm currentTime);
+
+// OTA
+
+extern bool isOTAInProgress;
+
+void updateFirmware(byte *payload, unsigned int length);
 
 #endif

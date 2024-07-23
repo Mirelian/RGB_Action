@@ -7,7 +7,7 @@ TaskHandle_t xHandleCheckTime = NULL;
 
 void vTaskMode0(void *pvParameters)
 {
-    vTaskDelay(50 / portTICK_PERIOD_MS); // Small delay to prevent task hogging CPU
+    vTaskDelay(50 / portTICK_PERIOD_MS); // Small delay to prevent task triggeing at the beggining
     for (;;)
     {
         vTaskDelay((actions[current_com].duration - 50) / portTICK_PERIOD_MS);

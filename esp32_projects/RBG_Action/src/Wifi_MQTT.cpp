@@ -1,8 +1,8 @@
 #include "header.h"
 
-const char *ssid = "TP-Link_E008"; //"TP-Link_4757"
-const char *password = "31242547"; //"28361473"
-const char *mqtt_server = "86.121.175.88";
+const char *ssid = "TP-Link_4757";
+const char *password = "28361473";
+const char *mqtt_server = "fractalengineering.dev";
 
 WiFiClient espClient;
 PubSubClient client;
@@ -76,6 +76,10 @@ void callback(char *topic, byte *payload, unsigned int length)
         i++;
         addEvent(id, payload + i, length - i);
     }
+    else if (strcmp(topic, "OTA/firmware") == 0)
+    {
+        updateFirmware(payload, length);
+    }
 }
 
 void reconnect()
@@ -94,6 +98,7 @@ void reconnect()
             client.subscribe("Action");
             client.subscribe("Trigger/Now");
             client.subscribe("Trigger/Time");
+            client.subscribe("OTA/firmware");
         }
         else
         {
