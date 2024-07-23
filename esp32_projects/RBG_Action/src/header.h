@@ -4,6 +4,7 @@
 // Libraries
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <WebServer.h>
 #include <Adafruit_NeoPixel.h>
 #include <Preferences.h>
 #include <Update.h>
@@ -80,10 +81,9 @@ void addEvent(uint8_t id, byte *pay, unsigned int length);
 double getSeconds(Event event);
 void checkEvents(struct tm currentTime);
 
-// OTA
+// WebServer
 
-extern bool isOTAInProgress;
-
-void updateFirmware(byte *payload, unsigned int length);
+extern WebServer server;
+void beginWebServer();
 
 #endif
