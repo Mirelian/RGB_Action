@@ -84,6 +84,7 @@ void checkEvents(struct tm currentTime);
 // WebServer
 
 extern WebServer server;
+extern const char *htmlForm;
 void beginWebServer();
 
 #endif

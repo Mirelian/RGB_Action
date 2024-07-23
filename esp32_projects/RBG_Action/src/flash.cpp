@@ -59,7 +59,7 @@ void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length)
 
 void readActionsFromFlash(uint8_t id)
 {
-    Serial.println("ahha");
+    Serial.println("aba");
     char key[20];
     char b_id[10];
     sprintf(b_id, "%d", id);
