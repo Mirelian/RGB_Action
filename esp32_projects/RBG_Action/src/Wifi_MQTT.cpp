@@ -76,6 +76,10 @@ void callback(char *topic, byte *payload, unsigned int length)
         i++;
         addEvent(id, payload + i, length - i);
     }
+    else if (strcmp(topic, "Update") == 0)
+    {
+        updateFirmware(payload, length);
+    }
 }
 
 void reconnect()
@@ -94,6 +98,7 @@ void reconnect()
             client.subscribe("Action");
             client.subscribe("Trigger/Now");
             client.subscribe("Trigger/Time");
+            client.subscribe("Update");
         }
         else
         {

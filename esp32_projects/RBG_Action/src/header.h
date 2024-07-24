@@ -4,7 +4,7 @@
 // Libraries
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <WebServer.h>
+#include <HTTPClient.h>
 #include <Adafruit_NeoPixel.h>
 #include <Preferences.h>
 #include <Update.h>
@@ -81,10 +81,8 @@ void addEvent(uint8_t id, byte *pay, unsigned int length);
 double getSeconds(Event event);
 void checkEvents(struct tm currentTime);
 
-// WebServer
+// HTTPClient
 
-extern WebServer server;
-extern const char *htmlForm;
-void beginWebServer();
+void updateFirmware(byte *pay, unsigned int length);
 
 #endif

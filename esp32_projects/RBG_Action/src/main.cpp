@@ -7,8 +7,6 @@ void setup()
 
   setup_wifi();
 
-  beginWebServer();
-
   client.setClient(espClient);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
@@ -49,8 +47,6 @@ void loop()
   // Set the color of the LED (e.g., red)
   pixels.setPixelColor(0, pixels.Color((int)R, (int)G, (int)B));
   pixels.show();
-
-  server.handleClient();
 
   delay(10);
 }
