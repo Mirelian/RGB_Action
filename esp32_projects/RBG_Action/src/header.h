@@ -33,6 +33,8 @@ extern const char *ssid;
 extern const char *password;
 extern const char *mqtt_server;
 
+extern char baseMacStr[18];
+
 extern WiFiClient espClient;
 extern PubSubClient client;
 

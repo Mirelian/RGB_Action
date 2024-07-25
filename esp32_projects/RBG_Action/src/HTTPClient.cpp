@@ -15,7 +15,7 @@ void updateFirmware(byte *pay, unsigned int length)
 
   HTTPClient http;
   http.begin(firmwareURL);
-  int httpCode = http.GET();
+  uint16_t httpCode = http.GET();
 
   if (httpCode > 0)
   {
