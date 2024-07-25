@@ -34,7 +34,7 @@ void setup_wifi()
             baseMac[0], baseMac[1], baseMac[2],
             baseMac[3], baseMac[4], baseMac[5]);
 
-    Serial.print("SoftAP MAC: ");
+    Serial.print("Station MAC: ");
     Serial.println(baseMacStr);
 
     Serial.print("IP address: ");
@@ -108,6 +108,7 @@ void reconnect()
         if (client.connect(clientId.c_str()))
         {
             Serial.println("connected");
+            client.publish((String(baseMacStr) + "/Status").c_str(), "just connected");
             client.subscribe((String(baseMacStr) + "/Action").c_str());
             client.subscribe((String(baseMacStr) + "/Trigger/Now").c_str());
             client.subscribe((String(baseMacStr) + "/Trigger/Time").c_str());
