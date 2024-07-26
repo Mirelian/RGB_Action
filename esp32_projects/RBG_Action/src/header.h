@@ -11,6 +11,10 @@
 #include <string.h>
 #include <time.h>
 
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+
 // NeoPixel
 #define PIN 38
 extern Adafruit_NeoPixel pixels;
@@ -29,8 +33,8 @@ extern Action actions[16];
 extern uint8_t current_com, com_size;
 
 // Wifi, MQTT
-extern const char *ssid;
-extern const char *password;
+extern char ssid[32];
+extern char password[32];
 extern const char *mqtt_server;
 
 extern char baseMacStr[18];
@@ -84,7 +88,14 @@ double getSeconds(Event event);
 void checkEvents(struct tm currentTime);
 
 // HTTPClient
-
 void updateFirmware(byte *pay, unsigned int length);
+
+// BLE
+
+#define SERVICE_UUID "a73e9e22-98b3-4b18-b01a-c73c154d8e97"
+#define SSID_CHAR_UUID "0b298162-d28b-4c2e-98e1-2f1d084f2792"
+#define PASS_CHAR_UUID "5c453f16-8d60-4b0c-a9d2-d32d7d0ffdc1"
+
+void setup_BLE();
 
 #endif

@@ -5,6 +5,7 @@ void setup()
   // Start the Serial communication to see messages in the Serial Monitor
   Serial.begin(115200);
 
+  setup_BLE();
   setup_wifi();
 
   client.setClient(espClient);

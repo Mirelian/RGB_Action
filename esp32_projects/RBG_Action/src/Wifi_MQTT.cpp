@@ -1,7 +1,7 @@
 #include "header.h"
 
-const char *ssid = "TP-Link_4757";
-const char *password = "28361473";
+char ssid[32] = {0};
+char password[32] = {0};
 const char *mqtt_server = "fractalengineering.dev";
 
 char baseMacStr[18];
@@ -12,6 +12,16 @@ PubSubClient client;
 void setup_wifi()
 {
     delay(10);
+
+    while (strlen(ssid) == 0 || strlen(password) == 0)
+    {
+        delay(1000);
+        Serial.print(".");
+    }
+
+    Serial.println();
+    Serial.println("Credentials recieved!");
+
     Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
