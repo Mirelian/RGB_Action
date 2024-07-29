@@ -82,13 +82,6 @@ void checkEvents(struct tm currentTime)
         else if (events[i].type == 'r')
         {
             time_t now = mktime(&currentTime);
-            // Serial.print(now);
-            // Serial.print(" ");
-            // Serial.print(events[i].lastOccurence);
-            // Serial.print(" ");
-            // Serial.print(difftime(now, events[i].lastOccurence));
-            // Serial.print(" ");
-            // Serial.println(getSeconds(events[i]));
             if (difftime(now, events[i].lastOccurence) >= getSeconds(events[i]))
             {
                 ev = true;

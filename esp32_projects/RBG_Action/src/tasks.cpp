@@ -41,12 +41,6 @@ void vTaskMode1(void *pvParameters)
             R += stepR;
             G += stepG;
             B += stepB;
-            // Serial.print("R:");
-            // Serial.print(R);
-            // Serial.print(" G:");
-            // Serial.print(G);
-            // Serial.print(" B:");
-            // Serial.println(B);
             vTaskDelay(1 / portTICK_PERIOD_MS);
         }
         current_com++;
@@ -104,7 +98,7 @@ void startTasks()
         NULL,              // Parameter to pass
         1,                 // Task priority
         &xHandleTaskMode1, // Task handle
-        1);                // Core where the task should run
+        0);                // Core where the task should run
 
     // Immediately suspend both tasks
     vTaskSuspend(xHandleTaskMode1);

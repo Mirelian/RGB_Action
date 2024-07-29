@@ -19,10 +19,8 @@ void updateFirmware(byte *pay, unsigned int length)
 
   if (httpCode > 0)
   {
-    // HTTP header has been sent and server response header has been handled
     Serial.printf("HTTP GET code: %d\n", httpCode);
 
-    // File found at server
     if (httpCode == HTTP_CODE_OK)
     {
       int contentLength = http.getSize();
