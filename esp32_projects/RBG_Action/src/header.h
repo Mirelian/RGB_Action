@@ -46,11 +46,17 @@ void setup_wifi();
 void callback(char *topic, byte *payload, unsigned int length);
 void reconnect();
 
+void listIDs(uint8_t nrIDs, uint8_t *IDs);
+void showID(uint8_t id, Action *ac, uint8_t size);
+
 // Flash
 extern Preferences prefs;
 
 void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length);
 void readActionsFromFlash(uint8_t id);
+
+void writeID(uint8_t id);
+void deleteID(uint8_t id);
 
 // Tasks
 extern TaskHandle_t xHandleTaskMode0;

@@ -62,7 +62,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
     Serial.println();
 
-    if (strcmp(topic, (String(baseMacStr) + "/Action").c_str()) == 0)
+    if (strcmp(topic, (String(baseMacStr) + "/Scene/Write").c_str()) == 0)
     {
         unsigned int i = 0;
         uint8_t id = 0;
@@ -74,6 +74,15 @@ void callback(char *topic, byte *payload, unsigned int length)
         }
         i++;
         writeActionsToFlash(id, payload + i, length - i);
+    }
+    if (strcmp(topic, (String(baseMacStr) + "/Scene/Delete").c_str()) == 0)
+    {
+        uint8_t id = 0;
+        for (unsigned int i = 0; i < length; i++)
+        {
+            id = id * 10 + (payload[i] - '0');
+        }
+        deleteID(id);
     }
     else if (strcmp(topic, (String(baseMacStr) + "/Trigger/Now").c_str()) == 0)
     {
@@ -113,8 +122,8 @@ void reconnect()
         if (client.connect((String(baseMacStr) + "-ESP32").c_str()))
         {
             Serial.println("connected");
-            client.publish((String(baseMacStr) + "/Status").c_str(), "just connected");
-            client.subscribe((String(baseMacStr) + "/Action").c_str());
+            client.subscribe((String(baseMacStr) + "/Scene/Write").c_str());
+            client.subscribe((String(baseMacStr) + "/Scene/Delete").c_str());
             client.subscribe((String(baseMacStr) + "/Trigger/Now").c_str());
             client.subscribe((String(baseMacStr) + "/Trigger/Time").c_str());
             client.subscribe((String(baseMacStr) + "/Update").c_str());
@@ -127,4 +136,36 @@ void reconnect()
             delay(5000);
         }
     }
+}
+
+void listIDs(uint8_t nrIDs, uint8_t *IDs)
+{
+    String message = String(nrIDs);
+    message += ";";
+    for (uint8_t i = 0; i < nrIDs; i++)
+    {
+        message += String(IDs[i]);
+        message += ",";
+    }
+
+    client.publish((String(baseMacStr) + "/Scene/List").c_str(), message.c_str());
+}
+
+void showID(uint8_t id, Action *ac, uint8_t size)
+{
+    String message = String(id);
+    message += ";";
+    for (uint8_t i = 0; i < size; i++)
+    {
+        uint8_t *ptr = (uint8_t *)&ac[i];
+        for (uint8_t j = 0; j < 4; j++)
+        {
+            message += String(*(ptr + j));
+            message += ",";
+        }
+        message += String(ac[i].duration);
+        message += ";";
+    }
+
+    client.publish((String(baseMacStr) + "/Scene/Show").c_str(), message.c_str());
 }

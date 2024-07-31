@@ -18,8 +18,6 @@ void setup()
   pixels.updateType(NEO_GRB + NEO_KHZ800);
   pixels.begin();
 
-  prefs.begin("actions", false);
-
   startTimeTask();
 }
 

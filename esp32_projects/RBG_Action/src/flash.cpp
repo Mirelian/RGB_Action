@@ -2,13 +2,121 @@
 
 Preferences prefs;
 
+void writeID(uint8_t id)
+{
+
+    prefs.begin("actions", false);
+
+    if (!prefs.isKey("nrIDs"))
+    {
+        prefs.putBytes("IDs", (void *)&id, sizeof(uint8_t));
+        prefs.putBytes("nrIDs", (void *)1, sizeof(uint8_t));
+    }
+    else
+    {
+        uint8_t nrIDs;
+        prefs.getBytes("nrIDs", (void *)&nrIDs, sizeof(uint8_t));
+
+        uint8_t *IDs;
+        IDs = new uint8_t[++nrIDs];
+        prefs.getBytes("IDs", IDs, nrIDs * sizeof(uint8_t));
+
+        bool isPresent = false;
+        for (uint8_t i = 0; i < nrIDs - 1; i++)
+        {
+            if (IDs[i] == id)
+            {
+                isPresent = true;
+                break;
+            }
+        }
+
+        if (!isPresent)
+        {
+            IDs[nrIDs - 1] = id;
+
+            for (uint8_t interval = nrIDs / 2; interval > 0; interval /= 2)
+            {
+                for (uint8_t i = interval; i < nrIDs; i += 1)
+                {
+                    uint8_t temp = IDs[i];
+                    uint8_t j;
+                    for (j = i; j >= interval && IDs[j - interval] > temp; j -= interval)
+                    {
+                        IDs[j] = IDs[j - interval];
+                    }
+                    IDs[j] = temp;
+                }
+            }
+            prefs.putBytes("nrIDs", (void *)&nrIDs, sizeof(uint8_t));
+            prefs.putBytes("IDs", IDs, nrIDs * sizeof(uint8_t));
+        }
+
+        listIDs(nrIDs, IDs);
+
+        delete[] IDs;
+    }
+
+    prefs.end();
+}
+
+void deleteID(uint8_t id)
+{
+    prefs.begin("actions", false);
+
+    prefs.remove((String(id) + "_scene_").c_str());
+
+    uint8_t nrIDs;
+    prefs.getBytes("nrIDs", (void *)&nrIDs, sizeof(uint8_t));
+
+    uint8_t *IDs;
+    IDs = new uint8_t[nrIDs];
+    prefs.getBytes("IDs", IDs, nrIDs * sizeof(uint8_t));
+
+    bool isPresent = false;
+
+    for (uint8_t i = 0; i < nrIDs; i++)
+    {
+        if (IDs[i] == id)
+        {
+            IDs[i] = IDs[i] + IDs[nrIDs - 1];
+            IDs[nrIDs - 1] = IDs[i] - IDs[nrIDs - 1];
+            IDs[i] = IDs[i] - IDs[nrIDs - 1];
+            isPresent = true;
+            break;
+        }
+    }
+
+    if (isPresent)
+    {
+        nrIDs--;
+
+        for (uint8_t interval = nrIDs / 2; interval > 0; interval /= 2)
+        {
+            for (uint8_t i = interval; i < nrIDs; i += 1)
+            {
+                uint8_t temp = IDs[i];
+                uint8_t j;
+                for (j = i; j >= interval && IDs[j - interval] > temp; j -= interval)
+                {
+                    IDs[j] = IDs[j - interval];
+                }
+                IDs[j] = temp;
+            }
+        }
+        prefs.putBytes("nrIDs", (void *)&nrIDs, sizeof(uint8_t));
+        prefs.putBytes("IDs", IDs, nrIDs * sizeof(uint8_t));
+    }
+    listIDs(nrIDs, IDs);
+
+    delete[] IDs;
+
+    prefs.end();
+}
+
 void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length)
 {
-    char key[20];
-    char b_id[10];
-    sprintf(b_id, "%d", id);
-    strcpy(key, b_id);
-    strcat(key, "_scene_");
+    prefs.begin("actions", false);
 
     Action Aactions[16];
 
@@ -30,8 +138,6 @@ void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length)
 
             *(ptr + j) = result;
             i++;
-            // Serial.print(result);
-            // Serial.print(" ");
         }
         Aactions[numActions].duration = 0;
         while (pay[i] != ';')
@@ -53,20 +159,26 @@ void writeActionsToFlash(uint8_t id, byte *pay, unsigned int length)
         i++;
     }
 
-    prefs.putBytes(key, Aactions, sizeof(Action) * numActions);
+    prefs.putBytes((String(id) + "_scene_").c_str(), Aactions, sizeof(Action) * numActions);
     Serial.println("Actions written to flash memory.");
+
+    writeID(id);
+    showID(id, Aactions, numActions);
+
+    prefs.end();
 }
 
 void readActionsFromFlash(uint8_t id)
 {
-    char key[20];
-    char b_id[10];
-    sprintf(b_id, "%d", id);
-    strcpy(key, b_id);
-    strcat(key, "_scene_");
+    prefs.begin("actions", true);
 
-    size_t schLen = prefs.getBytesLength(key);
+    size_t schLen = prefs.getBytesLength((String(id) + "_scene_").c_str());
     memset(actions, 0, sizeof(Action) * 16);
-    prefs.getBytes(key, actions, schLen);
+    prefs.getBytes((String(id) + "_scene_").c_str(), actions, schLen);
     com_size = schLen / sizeof(Action);
+
+    writeID(id);
+    showID(id, actions, com_size);
+
+    prefs.end();
 }
