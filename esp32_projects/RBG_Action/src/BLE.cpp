@@ -40,5 +40,12 @@ void setup_BLE()
     pService->start();
     pServer->getAdvertising()->start();
 
+    uint8_t btMac[6];
+    esp_read_mac(btMac, ESP_MAC_BT);
+
+    Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X\n",
+                  btMac[0], btMac[1], btMac[2],
+                  btMac[3], btMac[4], btMac[5]);
+
     Serial.println("Waiting for a client connection to write SSID and password...");
 }
