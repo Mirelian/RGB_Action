@@ -60,12 +60,14 @@ void readActionsFromFlash(uint8_t id)
 {
     prefs.begin("actions", true);
 
-    size_t schLen = prefs.getBytesLength((String(id) + "_scene_").c_str());
-    memset(actions, 0, sizeof(Action) * 16);
-    prefs.getBytes((String(id) + "_scene_").c_str(), actions, schLen);
-    com_size = schLen / sizeof(Action);
-
-    showID(id, actions, com_size);
+    if (!prefs.isKey((String(id) + "_scene_").c_str()))
+    {
+        size_t schLen = prefs.getBytesLength((String(id) + "_scene_").c_str());
+        memset(actions, 0, sizeof(Action) * 16);
+        prefs.getBytes((String(id) + "_scene_").c_str(), actions, schLen);
+        com_size = schLen / sizeof(Action);
+        showID(id, actions, com_size);
+    }
 
     prefs.end();
 
@@ -76,7 +78,6 @@ void writeID(uint8_t id)
 {
     if (!prefs.isKey("nrIDs"))
     {
-
         uint8_t aux = 1;
         prefs.putBytes("nrIDs", (void *)&aux, sizeof(uint8_t));
         prefs.putBytes("IDs", (void *)&id, sizeof(uint8_t));
@@ -189,7 +190,7 @@ void listIDs(uint8_t nrIDs, uint8_t *IDs)
 {
     String message = String(nrIDs);
     message += ";";
-    for (uint8_t i = 0; i < nrIDs - 1; i++)
+    for (uint8_t i = 0; i < nrIDs; i++)
     {
         message += String(IDs[i]);
         message += ",";

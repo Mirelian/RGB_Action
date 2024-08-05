@@ -46,7 +46,6 @@ void setup_wifi();
 void callback(char *topic, byte *payload, unsigned int length);
 void reconnect();
 
-
 // Flash
 extern Preferences prefs;
 
@@ -98,7 +97,6 @@ void checkEvents(struct tm currentTime);
 void updateFirmware(byte *pay, unsigned int length);
 
 // BLE
-
 #define SERVICE_UUID "a73e9e22-98b3-4b18-b01a-c73c154d8e97"
 #define SSID_CHAR_UUID "0b298162-d28b-4c2e-98e1-2f1d084f2792"
 #define PASS_CHAR_UUID "5c453f16-8d60-4b0c-a9d2-d32d7d0ffdc1"
