@@ -1,7 +1,7 @@
 #include "header.h"
 
-char ssid[32] = {0};
-char password[32] = {0};
+char ssid[32] = "TP-Link_E008";
+char password[32] = "31242547";
 const char *mqtt_server = "fractalengineering.dev";
 
 char baseMacStr[18];
@@ -62,7 +62,20 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
     Serial.println();
 
-    if (strcmp(topic, (String(baseMacStr) + "/Scene/Add").c_str()) == 0)
+    if (strcmp(topic, (String(baseMacStr) + "/Event/Add").c_str()) == 0)
+    {
+        unsigned int i = 0;
+        uint8_t id = 0;
+
+        while (payload[i] != ';')
+        {
+            id = id * 10 + (payload[i] - '0');
+            i++;
+        }
+        i++;
+        addEvent(id, payload + i, length - i);
+    }
+    else if (strcmp(topic, (String(baseMacStr) + "/Scene/Add").c_str()) == 0)
     {
         unsigned int i = 0;
         uint8_t id = 0;
@@ -75,7 +88,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         i++;
         writeActionsToFlash(id, payload + i, length - i);
     }
-    if (strcmp(topic, (String(baseMacStr) + "/Scene/Delete").c_str()) == 0)
+    else if (strcmp(topic, (String(baseMacStr) + "/Scene/Delete").c_str()) == 0)
     {
         uint8_t id = 0;
         for (unsigned int i = 0; i < length; i++)
@@ -84,7 +97,28 @@ void callback(char *topic, byte *payload, unsigned int length)
         }
         deleteID(id);
     }
-    else if (strcmp(topic, (String(baseMacStr) + "/Trigger/Now").c_str()) == 0)
+    else if (strcmp(topic, (String(baseMacStr) + "/Trigger/Color").c_str()) == 0)
+    {
+        stopTasks();
+        unsigned int i = 0;
+        uint8_t result = 0, j = 0;
+
+        uint8_t color[3] = {0, 0, 0};
+        while (i < length)
+        {
+            color[j] = color[j] * 10 + (payload[i] - '0');
+            i++;
+            if (payload[i] == ';')
+            {
+                j++;
+                i++;
+            }
+        }
+        R = color[0];
+        G = color[1];
+        B = color[2];
+    }
+    else if (strcmp(topic, (String(baseMacStr) + "/Trigger/Scene").c_str()) == 0)
     {
         uint8_t id = 0;
         for (unsigned int i = 0; i < length; i++)
@@ -94,19 +128,6 @@ void callback(char *topic, byte *payload, unsigned int length)
         Serial.println(id);
         readActionsFromFlash(id);
         startTasks();
-    }
-    else if (strcmp(topic, (String(baseMacStr) + "/Trigger/Time").c_str()) == 0)
-    {
-        unsigned int i = 0;
-        uint8_t id = 0;
-
-        while (payload[i] != ';')
-        {
-            id = id * 10 + (payload[i] - '0');
-            i++;
-        }
-        i++;
-        addEvent(id, payload + i, length - i);
     }
     else if (strcmp(topic, (String(baseMacStr) + "/Update").c_str()) == 0)
     {
@@ -122,10 +143,11 @@ void reconnect()
         if (client.connect((String(baseMacStr) + "-ESP32").c_str()))
         {
             Serial.println("connected");
+            client.subscribe((String(baseMacStr) + "/Event/Add").c_str());
             client.subscribe((String(baseMacStr) + "/Scene/Add").c_str());
             client.subscribe((String(baseMacStr) + "/Scene/Delete").c_str());
-            client.subscribe((String(baseMacStr) + "/Trigger/Now").c_str());
-            client.subscribe((String(baseMacStr) + "/Trigger/Time").c_str());
+            client.subscribe((String(baseMacStr) + "/Trigger/Color").c_str());
+            client.subscribe((String(baseMacStr) + "/Trigger/Scene").c_str());
             client.subscribe((String(baseMacStr) + "/Update").c_str());
             listIDs();
         }

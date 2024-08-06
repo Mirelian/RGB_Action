@@ -60,7 +60,7 @@ void readActionsFromFlash(uint8_t id)
 {
     prefs.begin("actions", true);
 
-    if (!prefs.isKey((String(id) + "_scene_").c_str()))
+    if (prefs.isKey((String(id) + "_scene_").c_str()))
     {
         size_t schLen = prefs.getBytesLength((String(id) + "_scene_").c_str());
         memset(actions, 0, sizeof(Action) * 16);
