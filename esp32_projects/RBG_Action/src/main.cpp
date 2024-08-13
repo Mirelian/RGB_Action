@@ -18,7 +18,7 @@ void setup()
   pixels.updateType(NEO_GRB + NEO_KHZ800);
   pixels.begin();
 
-  startTimeTask();
+  startTasks();
 }
 
 void loop()
@@ -28,18 +28,6 @@ void loop()
     reconnect();
   }
   client.loop();
-
-  if (current_com < com_size)
-  {
-    if (actions[current_com].mode == 0)
-    {
-      vTaskResume(xHandleTaskMode0);
-    }
-    else if (actions[current_com].mode == 1)
-    {
-      vTaskResume(xHandleTaskMode1);
-    }
-  }
 
   pixels.clear();
   pixels.setPixelColor(0, pixels.Color((int)R, (int)G, (int)B));

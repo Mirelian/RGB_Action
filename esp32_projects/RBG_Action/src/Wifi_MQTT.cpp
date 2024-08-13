@@ -1,7 +1,7 @@
 #include "header.h"
 
-char ssid[32] = {0};
-char password[32] = {0};
+char ssid[32] = "TP-Link_4757";
+char password[32] = "28361473";
 const char *mqtt_server = "fractalengineering.dev";
 
 char baseMacStr[18];
@@ -99,7 +99,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
     else if (strcmp(topic, (String(baseMacStr) + "/Trigger/Color").c_str()) == 0)
     {
-        stopTasks();
+        stopActionTask();
         unsigned int i = 0;
         uint8_t result = 0, j = 0;
 
@@ -127,7 +127,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         }
         Serial.println(id);
         readActionsFromFlash(id);
-        startTasks();
+        vTaskResume(xHandleActionMode);
     }
     else if (strcmp(topic, (String(baseMacStr) + "/Update").c_str()) == 0)
     {

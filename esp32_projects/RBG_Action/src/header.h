@@ -59,17 +59,13 @@ void listIDs(uint8_t nrIDs, uint8_t *IDs);
 void showID(uint8_t id, Action *ac, uint8_t size);
 
 // Tasks
-extern TaskHandle_t xHandleTaskMode0;
-extern TaskHandle_t xHandleTaskMode1;
-
+extern TaskHandle_t xHandleActionMode;
 extern TaskHandle_t xHandleCheckTime;
 
-void vTaskMode0(void *pvParameters);
-void vTaskMode1(void *pvParameters);
+void vActionMode(void *pvParameters);
 void vCheckTime(void *pvParameters);
-void stopTasks();
 void startTasks();
-void startTimeTask();
+void stopActionTask();
 
 // NTP and time
 typedef struct schedule

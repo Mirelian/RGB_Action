@@ -96,6 +96,6 @@ void checkEvents(struct tm currentTime)
         Serial.print("ID:");
         Serial.println(events[i].id);
         readActionsFromFlash(events[i].id);
-        startTasks();
+        vTaskResume(xHandleActionMode);
     }
 }

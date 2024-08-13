@@ -66,6 +66,7 @@ void readActionsFromFlash(uint8_t id)
         memset(actions, 0, sizeof(Action) * 16);
         prefs.getBytes((String(id) + "_scene_").c_str(), actions, schLen);
         com_size = schLen / sizeof(Action);
+        current_com = 0;
         showID(id, actions, com_size);
     }
 
