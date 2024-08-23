@@ -1,7 +1,7 @@
 #include "header.h"
 
-char ssid[32] = "TP-Link_4757";
-char password[32] = "28361473";
+char ssid[32] = {};
+char password[32] = {};
 const char *mqtt_server = "fractalengineering.dev";
 
 char baseMacStr[18];
