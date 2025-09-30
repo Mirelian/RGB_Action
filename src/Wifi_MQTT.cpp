@@ -2,7 +2,7 @@
 
 char ssid[32] = {};
 char password[32] = {};
-const char *mqtt_server = "fractalengineering.dev";
+const char *mqtt_server = ""; // MQTT server address needs to be set
 
 char baseMacStr[18];
 
